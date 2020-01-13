@@ -1,12 +1,8 @@
 package com.atguigu.gmall.manage.service.Impl;
 
-import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
-import com.atguigu.gmall.bean.PmsSkuAttrValue;
-import com.atguigu.gmall.bean.PmsSkuImage;
-import com.atguigu.gmall.bean.PmsSkuInfo;
-import com.atguigu.gmall.bean.PmsSkuSaleAttrValue;
+import com.atguigu.gmall.bean.*;
 import com.atguigu.gmall.manage.mapper.PmsSkuAttrValueMapper;
 import com.atguigu.gmall.manage.mapper.PmsSkuImageMapper;
 import com.atguigu.gmall.manage.mapper.PmsSkuInfoMapper;
@@ -129,5 +125,21 @@ public class SkuServiceImpl implements SkuService {
     @Override
     public List<PmsSkuInfo> getSkuSaleAttrValueListBySpu(String productId) {
         return pmsSkuInfoMapper.selectSkuSaleAttrValueListBySpu(productId);
+    }
+
+    @Override
+    public List<PmsSkuInfo> getAllSku(String catalog3Id) {
+        // 根据三级分类获取SKU
+        PmsSkuInfo skuInfo = new PmsSkuInfo();
+        skuInfo.setCatalog3Id(catalog3Id);
+        List<PmsSkuInfo> pmsSkuInfos = pmsSkuInfoMapper.select(skuInfo);
+        for (PmsSkuInfo pmsSkuInfo : pmsSkuInfos) {
+            String skuId = pmsSkuInfo.getId();
+            PmsSkuAttrValue attrValue = new PmsSkuAttrValue();
+            attrValue.setSkuId(skuId);
+            List<PmsSkuAttrValue> pmsSkuAttrValues = pmsSkuAttrValueMapper.select(attrValue);
+            pmsSkuInfo.setSkuAttrValueList(pmsSkuAttrValues);
+        }
+        return pmsSkuInfos;
     }
 }
