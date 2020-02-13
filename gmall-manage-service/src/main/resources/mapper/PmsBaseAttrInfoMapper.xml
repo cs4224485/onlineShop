@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.gmall.manage.mapper.PmsBaseAttrInfoMapper">
+    <select id="selectAttrValueListByValueId"  resultMap="selectAttrValueListByValueIdMap">
+        SELECT
+			bai.*,bai.id as aid, bav.*, bav.id as vid
+		FROM
+			pms_base_attr_info AS bai,
+			pms_base_attr_value AS bav
+		WHERE
+			bai.id = bav.attr_id and
+			bav.id in (${valueIdStr})
+    </select>
+	<resultMap id="selectAttrValueListByValueIdMap" type="com.atguigu.gmall.bean.PmsBaseAttrInfo" autoMapping="true">
+		<result column="aid" property="id"/>
+		<collection property="attrValueList" ofType="com.atguigu.gmall.bean.PmsBaseAttrValue" autoMapping="true">
+			<result column="vid" property="id"/>
+		</collection>
+	</resultMap>
+</mapper>

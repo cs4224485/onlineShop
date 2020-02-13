@@ -8,6 +8,8 @@ import com.atguigu.gmall.service.SkuService;
 import io.searchbox.client.JestClient;
 import io.searchbox.core.Index;
 
+import io.searchbox.core.Search;
+import io.searchbox.core.SearchResult;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
@@ -59,7 +61,8 @@ public class GmallSearchServiceApplicationTests {
 
     }
 
-    public static  void query(){
+    @Test
+    public void query() throws IOException{
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         // bool
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
@@ -77,6 +80,20 @@ public class GmallSearchServiceApplicationTests {
         searchSourceBuilder.from(0);
         // size
         searchSourceBuilder.size(20);
-        // hi
+        // highlight
+        searchSourceBuilder.highlight(null);
+        String dslStr = searchSourceBuilder.toString();
+        System.err.println(dslStr);
+
+        // 用API执行复杂查询
+        List<PmsSearchSku> pmsSearchSkuList = new ArrayList<>();
+        Search search = new Search.Builder(dslStr).addIndex("gmall0105").addType("PmsSkuInfo").build();
+        SearchResult execute = jestClient.execute(search);
+        List<SearchResult.Hit<PmsSearchSku, Void>> hits = execute.getHits(PmsSearchSku.class);
+        for (SearchResult.Hit<PmsSearchSku, Void> hit : hits) {
+            PmsSearchSku source = hit.source;
+            pmsSearchSkuList.add(source);
+        }
+        System.out.println(pmsSearchSkuList.size());
     }
 }

@@ -11,10 +11,19 @@ public class PmsSearchSku implements Serializable {
     private String skuName;
     private String skuDesc;
     private BigDecimal price;
+    private String catalog3Id;
     private String skuDefaultImg;
     private double hotScore;
     private String productId;
     private List<PmsSkuAttrValue> skuAttrValueList;
+
+    public String getCatalog3Id() {
+        return catalog3Id;
+    }
+
+    public void setCatalog3Id(String catalog3Id) {
+        this.catalog3Id = catalog3Id;
+    }
 
     public long getId() {
         return id;
