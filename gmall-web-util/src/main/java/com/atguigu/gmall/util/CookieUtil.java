@@ -59,8 +59,8 @@ public class CookieUtil {
             Cookie cookie = new Cookie(cookieName, cookieValue);
             if (cookieMaxage >= 0)
                 cookie.setMaxAge(cookieMaxage);
-//            if (null != request)// 设置域名的cookie
-//                cookie.setDomain(getDomainName(request));
+            if (null != request)// 设置域名的cookie
+                cookie.setDomain(getDomainName(request));
             // 在域名的根路径下保存
             cookie.setPath("/");
             response.addCookie(cookie);

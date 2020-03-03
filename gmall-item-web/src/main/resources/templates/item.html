@@ -57,7 +57,7 @@
 							</li>
 						</ul>
 						<ul class="header_ul_right">
-							<li style="border: 0;"><a href="http://127.0.0.1:9099" class="aa">你好，请登录</a></li>
+							<li style="border: 0;"><a href="http://passport.gmall.com:9099" class="aa">你好，请登录</a></li>
 							<li><a href="../注册页面\index.html" style="color: red;">免费注册</a> |</li>
 							<li><a href="javascript:;" class="aa">我的订单</a> |</li>
 
@@ -261,7 +261,7 @@
 
 						<div class="box-btns clear">
 							<div class="box-btns-one">
-								<form id="itemForm" action="http://127.0.0.1:9084/addToCart" method="post">
+								<form id="itemForm" action="http://cat.gmall.com:9084/addToCart" method="post">
 									<input type="text" name="quantity" id=""  value="1"/>
 									<input type="hidden" name="skuId"  th:value="${skuInfo?.id}" />
 
@@ -1033,7 +1033,7 @@
             var skuId = kuSaleAttrValueJson[k];
 			console.log(skuId)
             if(skuId){
-                window.location.href = "http://127.0.0.1:9200/"+skuId+".html"
+                window.location.href = "http://item.gmall.com:9306/"+skuId+".html"
             }
         }
 	</script>

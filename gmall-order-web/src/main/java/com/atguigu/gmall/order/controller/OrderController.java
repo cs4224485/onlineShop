@@ -8,17 +8,21 @@ import com.atguigu.gmall.bean.OmsOrderItem;
 import com.atguigu.gmall.bean.UmsMemberReceiveAddress;
 import com.atguigu.gmall.service.CartService;
 import com.atguigu.gmall.service.OrderService;
+import com.atguigu.gmall.service.SkuService;
 import com.atguigu.gmall.service.UserService;
+import com.atguigu.gmall.util.CaculateUtil;
 import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -33,11 +37,16 @@ public class OrderController {
     @Reference
     OrderService orderService;
 
+    @Reference
+    SkuService skuService;
+
     @RequestMapping("submitOrder")
     @LoginRequired(loginSuccess = true)
-    public String submitOrder(String receiveAddressId, BigDecimal totalAmount, String tradeCode, HttpServletRequest request, HttpServletResponse response){
+    public ModelAndView submitOrder(String receiveAddressId, BigDecimal totalAmount, String tradeCode, HttpServletRequest request, HttpServletResponse response){
         String memberId = (String)request.getAttribute("memberId");
         String nickname = (String) request.getAttribute("nickname");
+        System.out.println(memberId);
+        System.out.println(nickname);
         // 检查交易码
         String success = orderService.checkTradeCode(memberId,tradeCode);
         if(success.equals("success")){
@@ -48,26 +57,47 @@ public class OrderController {
             omsOrder.setDiscountAmount(null);
             omsOrder.setMemberId(memberId);
             omsOrder.setMemberUsername(nickname);
+            String outTradeNo = "gmall";
+            outTradeNo = outTradeNo + System.currentTimeMillis();// 将毫秒时间戳拼接到外部订单号
+            SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHmmss");
+            outTradeNo = outTradeNo + sdf.format(new Date());// 将时间字符串拼接到外部订单号
+            omsOrder.setOrderSn(outTradeNo);
+            omsOrder.setPayAmount(totalAmount);
+            omsOrder.setOrderType(1);
+            UmsMemberReceiveAddress umsMemberReceiveAddress = userService.getReceiveAddressById(receiveAddressId);
+            omsOrder.setReceiverCity(umsMemberReceiveAddress.getCity());
+            omsOrder.setReceiverDetailAddress(umsMemberReceiveAddress.getDetailAddress());
+            omsOrder.setReceiverName(umsMemberReceiveAddress.getName());
+            omsOrder.setReceiverPhone(umsMemberReceiveAddress.getPhoneNumber());
+            omsOrder.setReceiverPostCode(umsMemberReceiveAddress.getPostCode());
+            omsOrder.setReceiverProvince(umsMemberReceiveAddress.getProvince());
+            omsOrder.setReceiverRegion(umsMemberReceiveAddress.getRegion());
+            // 当前日期加一天，一天后配送
+            Calendar c = Calendar.getInstance();
+            c.add(Calendar.DATE,1);
+            Date time = c.getTime();
+            omsOrder.setReceiveTime(time);
+            omsOrder.setSourceType(0);
+            omsOrder.setStatus(0);
+            omsOrder.setOrderType(0);
+            omsOrder.setTotalAmount(totalAmount);
+
             // 根据用户id获得要购买的商品列表(购物车)和总价格
             List<OmsCartItem> omsCartItems = cartService.cartList(memberId);
-
             for (OmsCartItem omsCartItem : omsCartItems) {
                 if(omsCartItem.getIsChecked().equals("1")){
                     // 获得订单详情列表
                     OmsOrderItem omsOrderItem = new OmsOrderItem();
                     // 检价
-                    boolean b =orderService.checkPrice();
+                    boolean b = skuService.checkPrice(omsCartItem.getProductSkuId(),omsCartItem.getPrice());
+                    System.out.println(b + ":价格");
                     if(b==false){
-                        return "tradeFail";
+                        ModelAndView mv = new ModelAndView("tradeFail");
+                        return mv;
                     }
-                    omsOrderItems.add(omsOrderItem);
+
                     omsOrderItem.setProductPic(omsCartItem.getProductPic());
                     omsOrderItem.setProductName(omsCartItem.getProductName());
-                    String outTradeNo = "gmall";
-                    outTradeNo = outTradeNo + System.currentTimeMillis(); // 将毫秒时间戳拼接到外部订单号
-                    SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHmmss");
-                    outTradeNo += sdf.format(new Date()); // 将时间字符串拼接到外部订单号
-                    omsOrderItem.setOrderSn(outTradeNo); // 外部订单号，用来和其他系统进行交互，防止重复
                     omsOrderItem.setProductCategoryId(omsCartItem.getProductCategoryId());
                     omsOrderItem.setProductPrice(omsCartItem.getPrice());
                     omsOrderItem.setRealAmount(omsCartItem.getTotalPrice());
@@ -75,21 +105,27 @@ public class OrderController {
                     omsOrderItem.setProductSkuId(omsCartItem.getProductSkuId());
                     omsOrderItem.setProductId(omsCartItem.getProductId());
                     omsOrderItem.setProductSn("仓库对应的商品编号"); // 在仓库中的skuID
-
+                    omsOrderItems.add(omsOrderItem);
                     // 验证库，远程调用库存系统
 
                 }
             }
             omsOrder.setOmsOrderItems(omsOrderItems);
 
-
-
-
             // 将订单和订单详情写入数据库
-
             // 删除购物车对应商品
+            orderService.saveOrder(omsOrder);
 
             // 重定向到支付系统
+            ModelAndView mv = new ModelAndView("redirect:http://payment.gmall.com:9082/index");
+
+            mv.addObject("outTradeNo", outTradeNo);
+            mv.addObject("totalAmount",totalAmount);
+            return mv;
+
+        }else {
+            ModelAndView mv = new ModelAndView("tradeFail");
+            return mv;
         }
 
     }
@@ -100,17 +136,24 @@ public class OrderController {
         String memberId = (String)request.getAttribute("memberId");
         String nickname = (String) request.getAttribute("nickname");
         // 收件人地址列表
-        List<UmsMemberReceiveAddress> receiveAddressByMemberId = userService.getReceiveAddressByMemberId(memberId);
+        List<UmsMemberReceiveAddress> receiveAddress= userService.getReceiveAddressByMemberId(memberId);
         // 将购物车集合转化为页面计算清单集合
         List<OmsCartItem> omsCartItems = cartService.cartList(memberId);
         List<OmsOrderItem> omsOrderItems  = new ArrayList<>();
         for (OmsCartItem omsCartItem : omsCartItems) {
             // 每循环一个购物车对象，就封装一个商品的详情到OmsOrderItem
-            OmsOrderItem omsOrderItem = new OmsOrderItem();
-            omsOrderItem.setProductName(omsCartItem.getProductName());
-            omsOrderItems.add(omsOrderItem);
+            if (omsCartItem.getIsChecked().equals("1")) {
+                OmsOrderItem omsOrderItem = new OmsOrderItem();
+                omsOrderItem.setProductName(omsCartItem.getProductName());
+                omsOrderItem.setProductPic(omsCartItem.getProductPic());
+                omsOrderItems.add(omsOrderItem);
+            }
         }
-        modelMap.put("omsOderItems", omsCartItems);
+
+        modelMap.put("omsOrderItems",omsOrderItems);
+
+        modelMap.put("userAddressList", receiveAddress);
+        modelMap.put("totalAmount", CaculateUtil.getAmount(omsCartItems));
         // 生成交易码，为了在提交订单时做交易码的校验
         String tradeCode = orderService.genTradeCode(memberId);
         modelMap.put("tradeCode", tradeCode);

@@ -16,10 +16,10 @@ public class PaymentInfo {
     private String  id;
 
     @Column
-    private String outTradeNo;
+    private String orderId;
 
     @Column
-    private String orderId;
+    private String orderSn;
 
     @Column
     private String alipayTradeNo;
@@ -50,20 +50,20 @@ public class PaymentInfo {
         this.id = id;
     }
 
-    public String getOutTradeNo() {
-        return outTradeNo;
-    }
-
-    public void setOutTradeNo(String outTradeNo) {
-        this.outTradeNo = outTradeNo;
-    }
-
     public String getOrderId() {
         return orderId;
     }
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    public String getOrderSn() {
+        return orderSn;
+    }
+
+    public void setOrderSn(String orderSn) {
+        this.orderSn = orderSn;
     }
 
     public String getAlipayTradeNo() {

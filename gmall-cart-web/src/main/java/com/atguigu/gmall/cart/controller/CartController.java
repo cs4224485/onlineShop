@@ -7,6 +7,7 @@ import com.atguigu.gmall.bean.OmsCartItem;
 import com.atguigu.gmall.bean.PmsSkuInfo;
 import com.atguigu.gmall.service.CartService;
 import com.atguigu.gmall.service.SkuService;
+import com.atguigu.gmall.util.CaculateUtil;
 import com.atguigu.gmall.util.CookieUtil;
 
 import org.apache.catalina.servlet4preview.http.HttpServletRequest;
@@ -32,19 +33,39 @@ public class CartController {
     CartService cartService;
 
     @RequestMapping("checkCart")
+    @LoginRequired(loginSuccess = false)
     public String checkCart(String isChecked, String skuId, HttpServletRequest request, HttpServletResponse response, HttpSession session, ModelMap modelMap) {
         String userId = (String) request.getAttribute("memberId");
-        // 调用服务，修改状态
-        OmsCartItem omsCartItem = new OmsCartItem();
-        omsCartItem.setMemberId(userId);
-        omsCartItem.setProductSkuId(skuId);
-        omsCartItem.setIsChecked(isChecked);
-        cartService.checkCart(omsCartItem);
-        // 将最新的数据从缓存中查出， 渲染给内嵌页
-        List<OmsCartItem> omsCartItems = cartService.cartList(userId);
+        List<OmsCartItem> omsCartItems = null;
+        System.out.println(userId+":userid");
+        if(StringUtils.isNotBlank(userId)){
+            // 调用服务，修改状态
+            OmsCartItem omsCartItem = new OmsCartItem();
+            omsCartItem.setMemberId(userId);
+            omsCartItem.setProductSkuId(skuId);
+            omsCartItem.setIsChecked(isChecked);
+            // 更新购物车状态
+            cartService.checkCart(omsCartItem);
+            // 将最新的数据从缓存中查出， 渲染给内嵌页
+             omsCartItems = cartService.cartList(userId);
+        }else {
+            String cartListCookie = CookieUtil.getCookieValue(request, "cartListCookie", true);
+            if (StringUtils.isNotBlank(cartListCookie)){
+                List<OmsCartItem> cookieCartItems = JSON.parseArray(cartListCookie, OmsCartItem.class);
+                for (OmsCartItem cookieCartItem : cookieCartItems) {
+                    if(cookieCartItem.getProductSkuId().equals(skuId)){
+                        cookieCartItem.setIsChecked(isChecked);
+                    }
+                }
+                omsCartItems = cookieCartItems;
+                // 更新cookie
+                CookieUtil.setCookie(request, response, "cartListCookie", JSON.toJSONString(omsCartItems),60 * 60 * 72, true);
+            }
+        }
+
         modelMap.put("cartList", omsCartItems);
         // 被勾选的商品总额
-        BigDecimal totalAmount = getTotalAmount(omsCartItems);
+        BigDecimal totalAmount = CaculateUtil.getAmount(omsCartItems);
         modelMap.put("totalAmount", totalAmount);
         return "cartListInner";
     }
@@ -69,8 +90,10 @@ public class CartController {
         omsCartItem.setProductSkuId(skuId);
         omsCartItem.setProductPic(skuInfo.getSkuDefaultImg());
         omsCartItem.setQuantity(new BigDecimal(quantity));
+        omsCartItem.setIsChecked("1");
+        omsCartItem.setTotalPrice(omsCartItem.getPrice().multiply(omsCartItem.getQuantity()));
         // 判断用户是否登录
-        String memberId = (String) request.getAttribute("memberId");;
+        String memberId = (String) request.getAttribute("memberId");
         if (StringUtils.isBlank(memberId)) {
             // 用户没有登录
             // cookie原有的购物车数据
@@ -142,29 +165,11 @@ public class CartController {
         }
         modelMap.put("cartList", omsCartItems);
         // 被勾选的商品总额
-        BigDecimal totalAmount = getTotalAmount(omsCartItems);
+        BigDecimal totalAmount = CaculateUtil.getAmount(omsCartItems);
         modelMap.put("totalAmount", totalAmount);
         return "cartList";
     }
 
-    @RequestMapping("toTrade")
-    @LoginRequired(loginSuccess = true)
-    public String toTrade() {
-        return "toTradeTest";
-    }
-
-    private BigDecimal getTotalAmount(List<OmsCartItem> omsCartItems) {
-        BigDecimal totalAmount = new BigDecimal("0");
-        for (OmsCartItem omsCartItem : omsCartItems) {
-            BigDecimal totalPrice = omsCartItem.getTotalPrice();
-            String isChecked = omsCartItem.getIsChecked();
-            if (isChecked != null && omsCartItem.getIsChecked().equals("1")) {
-                totalAmount = totalAmount.add(totalPrice);
-            }
-
-        }
-        return totalAmount;
-    }
 
     private boolean if_cart_exit(List<OmsCartItem> omsCartItems, OmsCartItem omsCartItem) {
         Boolean b = false;

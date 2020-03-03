@@ -1,6 +1,7 @@
 package com.atguigu.gmall.service;
 
 import com.atguigu.gmall.bean.OmsCartItem;
+import com.atguigu.gmall.bean.OmsOrderItem;
 
 import java.util.List;
 
@@ -16,4 +17,6 @@ public interface CartService {
     List<OmsCartItem> cartList(String userId);
 
     void checkCart(OmsCartItem omsCartItem );
+
+    void delProductSku(OmsOrderItem omsOrderItem);
 }

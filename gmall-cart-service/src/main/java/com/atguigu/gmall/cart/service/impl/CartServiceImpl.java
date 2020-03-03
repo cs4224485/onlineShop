@@ -3,6 +3,7 @@ package com.atguigu.gmall.cart.service.impl;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.bean.OmsCartItem;
+import com.atguigu.gmall.bean.OmsOrderItem;
 import com.atguigu.gmall.cart.mapper.OmsCartItemMapper;
 import com.atguigu.gmall.service.CartService;
 import com.atguigu.gmall.util.RedisUtil;
@@ -60,8 +61,8 @@ public class CartServiceImpl implements CartService {
             cartItem.setTotalPrice(cartItem.getPrice().multiply(cartItem.getQuantity()));
             map.put(cartItem.getProductSkuId(), JSON.toJSONString(cartItem));
         }
-        jedis.del("user"+memberId+":cart");
-        jedis.hmset("user:"+memberId+"cart", map);
+        jedis.del("user:"+memberId+":cart");
+        jedis.hmset("user:"+memberId+":cart", map);
         jedis.close();
     }
 
@@ -72,7 +73,7 @@ public class CartServiceImpl implements CartService {
         try{
             jedis = redisUtil.getJedis();
             // 用户购物车在redis的集合
-            List<String> hvals = jedis.hvals("user:" + userId + "cart");
+            List<String> hvals = jedis.hvals("user:" + userId + ":cart");
             for (String hval : hvals) {
                 OmsCartItem cartItem = JSON.parseObject(hval, OmsCartItem.class);
                 cartItemList.add(cartItem);
@@ -93,5 +94,15 @@ public class CartServiceImpl implements CartService {
         e.createCriteria().andEqualTo("memberId", omsCartItem.getMemberId()).andEqualTo( "productSkuId", omsCartItem.getProductSkuId());
         omsCartItemMapper.updateByExampleSelective(omsCartItem, e);
         flushCartCache(omsCartItem.getMemberId());
+    }
+
+    @Override
+    public void delProductSku(OmsOrderItem omsOrderItem) {
+        OmsCartItem omsCartItem = new OmsCartItem();
+        omsCartItem.setProductSkuId(omsOrderItem.getProductSkuId());
+        OmsCartItem omsCartItem1 = omsCartItemMapper.selectOne(omsCartItem);
+        if (omsCartItem1 != null){
+            omsCartItemMapper.delete(omsCartItem);
+        }
     }
 }

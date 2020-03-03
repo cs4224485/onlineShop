@@ -20,7 +20,7 @@ import java.util.Map;
 public class AuthInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 拦截代码
-        System.out.println("拦截器");
+
         // 判断被拦截的请求的访问方法的注解(是否是需要拦截的)
         HandlerMethod hm = (HandlerMethod) handler;
         LoginRequired methodAnnotation = hm.getMethodAnnotation(LoginRequired.class);
