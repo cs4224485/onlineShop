@@ -78,7 +78,7 @@ public class OrderController {
             Date time = c.getTime();
             omsOrder.setReceiveTime(time);
             omsOrder.setSourceType(0);
-            omsOrder.setStatus(0);
+            omsOrder.setStatus("0");
             omsOrder.setOrderType(0);
             omsOrder.setTotalAmount(totalAmount);
 
