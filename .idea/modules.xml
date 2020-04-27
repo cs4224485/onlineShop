@@ -21,7 +21,10 @@
       <module fileurl="file://$PROJECT_DIR$/gmall-search-web/gmall-search-web.iml" filepath="$PROJECT_DIR$/gmall-search-web/gmall-search-web.iml" />
       <module fileurl="file://$PROJECT_DIR$/gmall-seckill/gmall-seckill.iml" filepath="$PROJECT_DIR$/gmall-seckill/gmall-seckill.iml" />
       <module fileurl="file://$PROJECT_DIR$/gmall-service-util/gmall-service-util.iml" filepath="$PROJECT_DIR$/gmall-service-util/gmall-service-util.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gmall-user2/gmall-user.iml" filepath="$PROJECT_DIR$/gmall-user2/gmall-user.iml" />
       <module fileurl="file://$PROJECT_DIR$/gmall-user-service/gmall-user-service.iml" filepath="$PROJECT_DIR$/gmall-user-service/gmall-user-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gmall-user-service/gmall-user-service (1) (com.atguigu.gmall).iml" filepath="$PROJECT_DIR$/gmall-user-service/gmall-user-service (1) (com.atguigu.gmall).iml" />
+      <module fileurl="file://$PROJECT_DIR$/gmall-user-web/gmall-user-service (2) (com.atgugu.gmall).iml" filepath="$PROJECT_DIR$/gmall-user-web/gmall-user-service (2) (com.atgugu.gmall).iml" />
       <module fileurl="file://$PROJECT_DIR$/gmall-user-web/gmall-user-web.iml" filepath="$PROJECT_DIR$/gmall-user-web/gmall-user-web.iml" />
       <module fileurl="file://$PROJECT_DIR$/gmall-user2/gmall-user2.iml" filepath="$PROJECT_DIR$/gmall-user2/gmall-user2.iml" />
       <module fileurl="file://$PROJECT_DIR$/gmall-web-util/gmall-web-util.iml" filepath="$PROJECT_DIR$/gmall-web-util/gmall-web-util.iml" />
